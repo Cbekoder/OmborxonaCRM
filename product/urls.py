@@ -9,4 +9,9 @@ router.register(r'products', ProductViewSet, basename='product')
 
 urlpatterns = [
     path('', include(router.urls)),
+    path('product-inputs/', ProductInputCreateAPIView.as_view(), name='product_input_create'),
+    path('product-outputs/', ProductOutputCreateAPIView.as_view(), name='product_output_create'),
+    path('product-inputlist/', ProductInputAPIView.as_view(), name='product-inputs'),
+    path('product-outputlist/', ProductOutputAPIView.as_view(), name='product-outputs'),
+
 ]
