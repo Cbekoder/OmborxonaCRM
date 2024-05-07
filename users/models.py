@@ -10,3 +10,8 @@ class User(AbstractUser):
 
     def __str__(self):
         return f'{self.first_name} {self.last_name} - {self.position}'
+
+class ReportCode(models.Model):
+    password = models.CharField(max_length=10)
+    class Meta:
+        abstract = True

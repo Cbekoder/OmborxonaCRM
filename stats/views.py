@@ -37,15 +37,12 @@ class ReportAPIView(generics.RetrieveAPIView):
                 goods_out_price=Sum('output_quantity') * product.price
             )
 
-            # Calculate beginning quantity and price
-            beginning_quantity = product.quantity or 0  # Default to 0 if quantity is None
-            beginning_price = product.quantity * product.price if product.quantity else 0  # Default to 0 if quantity is None
+            beginning_quantity = product.quantity or 0
+            beginning_price = product.quantity * product.price if product.quantity else 0
 
-            # Calculate last quantity and price
             last_quantity = beginning_quantity + (goods_in['goods_in_quantity'] or 0) - (goods_out['goods_out_quantity'] or 0)
             last_price = beginning_price + (goods_in['goods_in_price'] or 0) - (goods_out['goods_out_price'] or 0)
 
-            # Check if all values are zero, if so, skip this product
             if all(value == 0 for value in [
                 beginning_quantity,
                 beginning_price,
