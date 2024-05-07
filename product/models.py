@@ -20,11 +20,12 @@ class Unit(models.Model):
 class Product(models.Model):
     name = models.CharField(max_length=100)
     description = models.TextField(null=True, blank=True)
-    category = models.ForeignKey(Category, on_delete=models.DO_NOTHING, blank=True, null=True)
+    category = models.ForeignKey(Category, on_delete=models.SET_NULL, blank=True, null=True)
     price = models.DecimalField(max_digits=15, decimal_places=2)
     quantity = models.PositiveIntegerField(default=0)
-    unit = models.ForeignKey(Unit, on_delete=models.DO_NOTHING, null=True)
+    unit = models.ForeignKey(Unit, on_delete=models.SET_NULL, null=True)
     prod_code = models.CharField(max_length=20)
+    
     def __str__(self):
         return self.name
 
