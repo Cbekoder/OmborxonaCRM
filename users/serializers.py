@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from users.models import User
+from users.models import User, ReportCode
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -21,3 +21,8 @@ class UserCreateSerializer(serializers.ModelSerializer):
         validated_data['position'] = 1  # Ensure position is 'omborchi'
         user = User.objects.create_user(**validated_data)
         return user
+
+class ReportCodeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ReportCode
+        fields = '__all__'

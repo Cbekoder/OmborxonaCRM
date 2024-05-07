@@ -19,7 +19,7 @@ class Unit(models.Model):
 
 class Product(models.Model):
     name = models.CharField(max_length=100)
-    description = models.TextField()
+    description = models.TextField(null=True, blank=True)
     category = models.ForeignKey(Category, on_delete=models.DO_NOTHING, blank=True, null=True)
     price = models.DecimalField(max_digits=15, decimal_places=2)
     quantity = models.PositiveIntegerField()
@@ -34,6 +34,7 @@ class ProductInput(models.Model):
         verbose_name_plural = 'Kirimlar'
     product = models.ForeignKey(Product, on_delete=models.SET_NULL, null=True)
     input_quantity = models.PositiveIntegerField(default=0)
+    all_quantity = models.PositiveIntegerField(default=0) # kirgandan keyingi qoldiq
     created_at = models.DateTimeField(auto_now_add=True)
     user_id = models.ForeignKey(User,
                                 on_delete=models.SET_NULL,
@@ -46,8 +47,9 @@ class ProductOutput(models.Model):
     class Meta:
         verbose_name = 'Chiqim'
         verbose_name_plural = 'Chiqimlar'
-    product = models.ForeignKey(Product, on_delete=models.SET_NULL, null=True)
+    product = models.ForeignKey(Product, on_delete=models.SET_NULL, null=True,)
     output_quantity = models.PositiveIntegerField(default=0)
+    all_quantity = models.PositiveIntegerField(default=0) # chiqqandan keyingi qoldiq
     created_at = models.DateTimeField(auto_now_add=True)
     user_id = models.ForeignKey(User,
                                 on_delete=models.SET_NULL,

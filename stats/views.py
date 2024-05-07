@@ -31,17 +31,41 @@ class ReportAPIView(generics.RetrieveAPIView):
                 goods_in_quantity=Sum('input_quantity'),
                 goods_in_price=Sum('input_quantity') * product.price
             )
+            first_good_in = ProductInput.objects.filter(product=product, created_at__range=(start_date, end_date)).order_by("created_at").first()
+            last_good_in = ProductInput.objects.filter(product=product, created_at__range=(start_date, end_date)).order_by("created_at").last()
 
             goods_out = ProductOutput.objects.filter(product=product, created_at__range=(start_date, end_date)).aggregate(
                 goods_out_quantity=Sum('output_quantity'),
                 goods_out_price=Sum('output_quantity') * product.price
             )
+            first_good_out = ProductOutput.objects.filter(product=product, created_at__range=(start_date, end_date)).order_by('created_at').first()
+            last_good_out = ProductOutput.objects.filter(product=product, created_at__range=(start_date, end_date)).order_by('created_at').last()
 
-            beginning_quantity = product.quantity or 0
-            beginning_price = product.quantity * product.price if product.quantity else 0
+            if first_good_in and first_good_out:
+                if first_good_in.created_at < first_good_out.created_at:
+                    beginning_quantity = first_good_in.all_quantity - first_good_in.input_quantity
+                else:
+                    beginning_quantity = first_good_out.all_quantity + first_good_out.output_quantity
+            elif first_good_in:
+                beginning_quantity = first_good_in.all_quantity - first_good_in.input_quantity
+            elif first_good_out:
+                beginning_quantity = first_good_out.all_quantity + first_good_out.output_quantity
+            else:
+                beginning_quantity = 0  
+            beginning_price = beginning_quantity * product.price if beginning_quantity else 0
 
-            last_quantity = beginning_quantity + (goods_in['goods_in_quantity'] or 0) - (goods_out['goods_out_quantity'] or 0)
-            last_price = beginning_price + (goods_in['goods_in_price'] or 0) - (goods_out['goods_out_price'] or 0)
+            if last_good_in and last_good_out:
+                if last_good_in.created_at > last_good_out.created_at:
+                    last_quantity = last_good_in.all_quantity
+                else:
+                    last_quantity = last_good_out.all_quantity
+            elif last_good_in:
+                last_quantity = last_good_in.all_quantity
+            elif last_good_out:
+                last_quantity = last_good_out.all_quantity
+            else:
+                last_quantity = 0  
+            last_price = last_quantity * product.price if last_quantity else 0
 
             if all(value == 0 for value in [
                 beginning_quantity,

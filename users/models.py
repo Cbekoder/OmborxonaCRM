@@ -14,4 +14,4 @@ class User(AbstractUser):
 class ReportCode(models.Model):
     password = models.CharField(max_length=10)
     class Meta:
-        abstract = True
+        verbose_name = "Parol"
