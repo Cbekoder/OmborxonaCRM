@@ -34,14 +34,9 @@ class ProductViewSet(viewsets.ModelViewSet):
 
     def generate_unique_ean13_barcode_number(self, max_attempts=100):
         for _ in range(max_attempts):
-            # Generate a new EAN-13 barcode number
             barcode_number = self.generate_ean13_barcode_number()
-            
-            # Check if the generated barcode number already exists
             if not Product.objects.filter(prod_code=barcode_number).exists():
                 return barcode_number
-        
-        # If max_attempts reached without finding a unique barcode number, raise an exception or handle the situation
         raise Exception("Failed to generate a unique EAN-13 barcode number after max attempts")
 
     def generate_ean13_barcode_number(self):
@@ -64,7 +59,7 @@ class ProductViewSet(viewsets.ModelViewSet):
         check_digit = (10 - (total_sum % 10)) % 10
         
         return check_digit
-
+    
 
 class ProductInputCreateAPIView(generics.CreateAPIView):
     serializer_class = ProductInputSerializer
@@ -76,11 +71,6 @@ class ProductInputCreateAPIView(generics.CreateAPIView):
         product = Product.objects.get(pk=product_id)
         product.quantity += input_quantity
         product.save()
-
-        # Create ProductInput instance
-        serializer.save()
-
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
 class ProductOutputCreateAPIView(generics.CreateAPIView):
