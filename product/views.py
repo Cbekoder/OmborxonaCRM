@@ -136,7 +136,6 @@ class ProductOutputAPIView(generics.ListAPIView):
     def get_queryset(self):
         if isinstance(self.request.user, User):
             return ProductOutput.objects.all()
-
         password = self.request.headers.get('password')
         report_code = ReportCode.objects.last()
         if report_code and password == report_code.password:
