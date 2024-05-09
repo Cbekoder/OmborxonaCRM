@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
-from .models import User
+from .models import User, ReportCode
 
 class UserAdmin(BaseUserAdmin):
     list_display = ('username', 'first_name', 'last_name', 'email', 'position', 'is_staff')
@@ -21,3 +21,4 @@ class UserAdmin(BaseUserAdmin):
     ordering = ('username',)
 
 admin.site.register(User, UserAdmin)
+admin.site.register(ReportCode)

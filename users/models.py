@@ -15,3 +15,6 @@ class ReportCode(models.Model):
     password = models.CharField(max_length=10)
     class Meta:
         verbose_name = "Parol"
+
+    def __str__(self):
+        return self.password

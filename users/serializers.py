@@ -25,4 +25,4 @@ class UserCreateSerializer(serializers.ModelSerializer):
 class ReportCodeSerializer(serializers.ModelSerializer):
     class Meta:
         model = ReportCode
-        fields = '__all__'
+        fields = ['password']
