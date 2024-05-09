@@ -13,25 +13,24 @@ class CategorySerializer(serializers.ModelSerializer):
 
 
 
-class ProductSerializer(serializers.ModelSerializer):
-    category = serializers.SerializerMethodField()
-    unit = serializers.SerializerMethodField()
-    quantity = serializers.IntegerField(read_only=True)  # Make quantity read-only
 
+class ProductSerializer(serializers.ModelSerializer):
     class Meta:
         model = Product
         fields = ['id', 'name', 'description', 'category', 'price', 'unit', 'prod_code', 'quantity']
         read_only_fields = ['prod_code']  # prod_code should be generated in the backend
 
-    def get_category(self, obj):
-        if obj.category:
-            return obj.category.name
-        return None
+class ProductCreateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Product
+        fields = ['name', 'description', 'category', 'price', 'unit']
+        # Exclude 'prod_code' and 'quantity' as they are read-only or auto-generated
 
-    def get_unit(self, obj):
-        if obj.unit:
-            return obj.unit.name
-        return None
+class ProductUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Product
+        fields = ['name', 'description', 'category', 'price', 'unit']
+        read_only_fields = ['prod_code']  # prod_code should not be updated
     
 class ProductInputSerializer(serializers.ModelSerializer):
     class Meta:
