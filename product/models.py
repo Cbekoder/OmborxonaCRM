@@ -22,7 +22,7 @@ class Product(models.Model):
     description = models.TextField(null=True, blank=True)
     category = models.ForeignKey(Category, on_delete=models.SET_NULL, blank=True, null=True)
     price = models.DecimalField(max_digits=15, decimal_places=2)
-    quantity = models.DecimalField(default=0, max_digits=8, decimal_places=2)
+    quantity = models.DecimalField(default=0, max_digits=8, decimal_places=2, blank=True)
     unit = models.ForeignKey(Unit, on_delete=models.SET_NULL, null=True)
     prod_code = models.CharField(max_length=20)
     
@@ -42,10 +42,12 @@ class ProductInput(models.Model):
                                 related_name='product_input')
     @property
     def all_quantity(self): # kirgandan keyingi qoldiq
-        return self.product.quantity + self.input_quantity
+        result = self.product.quantity + self.input_quantity
+        self.product.save()
+        return result
             
     def __str__(self):
-        return self.product.name
+        return self.product.name or None
 
 class ProductOutput(models.Model):
     class Meta:
@@ -61,10 +63,10 @@ class ProductOutput(models.Model):
                                 related_name='product_output')
     @property
     def all_quantity(self): # chiqqandan keyingi qoldiq
-        return self.product.quantity - self.output_quantity
+        result = self.product.quantity - self.output_quantity
+        self.product.save()
+        return result
 
     def __str__(self):
-        return self.product.name
-
-
+        return self.product.name if self.product else "default"
 

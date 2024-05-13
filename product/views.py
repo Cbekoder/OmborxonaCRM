@@ -10,7 +10,7 @@ import random
 from .serializers import (CategorySerializer, UnitSerializer,
                           ProductSerializer, ProductOutputSerializer,
                           ProductInputSerializer, ProductInputGetSerializer,
-                          ProductOutputGetSerializer)
+                          ProductOutputGetSerializer, ProductCreateSerializer)
 
 
 class CategoryViewSet(viewsets.ModelViewSet):
@@ -131,6 +131,7 @@ class ProductInputList(APIView):
                 # Update the related Product instance
                 product = Product.objects.get(pk=product_id)
                 product.quantity += input_quantity
+            
                 product.save()
                 return Response(serializer.data, status=status.HTTP_201_CREATED)
             return Response({"Xabar": "Noto'g'ri miqdor!"}, status=status.HTTP_400_BAD_REQUEST)
