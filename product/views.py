@@ -159,7 +159,7 @@ class ProductInputListByProduct(APIView):
         # Filter inputs by the specified product_id
         product_inputs = ProductInput.objects.filter(product_id=product_id)
         paginator = PageNumberPagination()
-        paginator.page_size = 2
+        paginator.page_size = 10
         result_page = paginator.paginate_queryset(product_inputs, request)        
         serializer = ProductInputGetSerializer(result_page, many=True)
         return paginator.get_paginated_response(serializer.data)
