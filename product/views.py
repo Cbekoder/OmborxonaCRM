@@ -3,6 +3,7 @@ from rest_framework.response import Response
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from users.permissions import IsBuxgalterUser, IsOmborchiUser
 from rest_framework.views import APIView
+from rest_framework.pagination import PageNumberPagination
 from django.http import Http404
 from .models import *
 from users.models import ReportCode
@@ -85,9 +86,13 @@ class ProductInputList(APIView):
     List all product inputs or create a new one.
     """
     def get(self, request, format=None):
+        paginator = PageNumberPagination()
+        paginator.page_size = 10  # Adjust the page size as needed
+
         product_inputs = ProductInput.objects.all()
-        serializer = ProductInputGetSerializer(product_inputs, many=True)
-        return Response(serializer.data)
+        result_page = paginator.paginate_queryset(product_inputs, request)
+        serializer = ProductInputGetSerializer(result_page, many=True)
+        return paginator.get_paginated_response(serializer.data)
 
     def post(self, request):
         serializer = ProductInputSerializer(data=request.data, context={'request': request})
@@ -160,7 +165,10 @@ class ProductInputListByProduct(APIView):
     def get(self, request, product_id, format=None):
         # Filter inputs by the specified product_id
         product_inputs = ProductInput.objects.filter(product_id=product_id)
-        serializer = ProductInputGetSerializer(product_inputs, many=True)
+        paginator = PageNumberPagination()
+        paginator.page_size = 3
+        result_page = paginator.paginate_queryset(product_inputs, request)        
+        serializer = ProductInputGetSerializer(result_page, many=True)
         return Response(serializer.data)
 
 
