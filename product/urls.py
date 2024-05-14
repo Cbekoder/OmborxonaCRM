@@ -9,6 +9,7 @@ router.register(r'products', ProductViewSet, basename='product')
 
 urlpatterns = [
     path('', include(router.urls)),
+    path('product-code/', ProductByCode.as_view()), # Get product by code!
     # Input
     path('inputs/', ProductInputList.as_view(), name='input-list'), # returns all inputs and creates new input
     path('input/<int:pk>/', ProductInputDetail.as_view(), name='input-detail'), # returns one input by ID

@@ -45,7 +45,7 @@ class ProductViewSet(viewsets.ModelViewSet):
 
             # Check if the generated barcode number already exists
             if not Product.objects.filter(prod_code=barcode_number).exists():
-                return barcode_number
+                return str(barcode_number)
 
         # If max_attempts reached without finding a unique barcode number, raise an exception or handle the situation
         raise Exception("Failed to generate a unique EAN-13 barcode number after max attempts")
@@ -60,7 +60,7 @@ class ProductViewSet(viewsets.ModelViewSet):
         # Concatenate the first 12 digits with the check digit
         ean13_barcode_number = first_12_digits + str(check_digit)
 
-        return ean13_barcode_number
+        return str(ean13_barcode_number)
 
     def _calculate_ean13_check_digit(self, first_12_digits):
         # Calculate the check digit using the EAN-13 algorithm
@@ -139,6 +139,18 @@ class ProductInputDetail(APIView):
     #     product_input.delete()
     #     return Response(status=status.HTTP_204_NO_CONTENT)
     
+
+class ProductByCode(APIView):
+    def get(self, request):
+        prod_code = request.query_params.get('prod_code')
+        if not prod_code:
+            return Response({"Xabar": "Maxsulot kodi berilmadi"}, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            product = Product.objects.get(prod_code=prod_code)
+        except Product.DoesNotExist:
+            return Response({"Xabar": "Maxsulot topilmadi"}, status=status.HTTP_404_NOT_FOUND)
+        serializer = ProductSerializer(product)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 class ProductInputListByProduct(APIView):
     """
