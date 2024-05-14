@@ -72,14 +72,7 @@ class ProductViewSet(viewsets.ModelViewSet):
 
         return check_digit
 
-#     queryset = ProductInput.objects.all()
-#     serializer_class = ProductInputSerializer
 
-#     def get(self, request, *args, **kwargs):
-#         if 'pk' in kwargs:
-#             return self.retrieve(request, *args, **kwargs)
-#         else:
-#             return self.list(request, *args, **kwargs)
 
 class ProductInputList(APIView):
     """
@@ -128,13 +121,13 @@ class ProductInputDetail(APIView):
         serializer = ProductInputGetSerializer(product_input)
         return Response(serializer.data)
 
-    def put(self, request, pk, format=None):
-        product_input = self.get_object(pk)
-        serializer = ProductInputSerializer(product_input, data=request.data, context={'request': request})
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    # def put(self, request, pk, format=None):
+    #     product_input = self.get_object(pk)
+    #     serializer = ProductInputSerializer(product_input, data=request.data, context={'request': request})
+    #     if serializer.is_valid():
+    #         serializer.save()
+    #         return Response(serializer.data)
+    #     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     # def delete(self, request, pk, format=None):
     #     product_input = self.get_object(pk)
@@ -166,10 +159,10 @@ class ProductInputListByProduct(APIView):
         # Filter inputs by the specified product_id
         product_inputs = ProductInput.objects.filter(product_id=product_id)
         paginator = PageNumberPagination()
-        paginator.page_size = 3
+        paginator.page_size = 2
         result_page = paginator.paginate_queryset(product_inputs, request)        
         serializer = ProductInputGetSerializer(result_page, many=True)
-        return Response(serializer.data)
+        return paginator.get_paginated_response(serializer.data)
 
 
                                                                             # OUTPUT
@@ -179,8 +172,11 @@ class ProductOutputList(APIView):
     """
     def get(self, request, format=None):
         product_outputs = ProductOutput.objects.all()
-        serializer = ProductOutputGetSerializer(product_outputs, many=True)
-        return Response(serializer.data)
+        paginator = PageNumberPagination()
+        paginator.page_size = 10
+        result_page = paginator.paginate_queryset(product_outputs, request)
+        serializer = ProductOutputGetSerializer(result_page, many=True)
+        return paginator.get_paginated_response(serializer.data)
 
     def post(self, request):
         serializer = ProductOutputSerializer(data=request.data, context={'request': request})
@@ -216,13 +212,13 @@ class ProductOutputtDetail(APIView):
         serializer = ProductOutputSerializer(product_output)
         return Response(serializer.data)
 
-    def put(self, request, pk, format=None):
-        product_output = self.get_object(pk)
-        serializer = ProductOutputSerializer(product_output, data=request.data, context={'request': request})
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    # def put(self, request, pk, format=None):
+    #     product_output = self.get_object(pk)
+    #     serializer = ProductOutputSerializer(product_output, data=request.data, context={'request': request})
+    #     if serializer.is_valid():
+    #         serializer.save()
+    #         return Response(serializer.data)
+    #     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     # def delete(self, request, pk, format=None):
     #     product_output = self.get_object(pk)
@@ -241,69 +237,10 @@ class ProductOutputListByProduct(APIView):
     def get(self, request, product_id, format=None):
         # Filter inputs by the specified product_id
         product_output = ProductOutput.objects.filter(product_id=product_id)
-        serializer = ProductOutputGetSerializer(product_output, many=True)
-        return Response(serializer.data)
+        paginator = PageNumberPagination()
+        paginator.page_size = 10
+        result_page = paginator.paginate_queryset(product_output, request)
+        serializer = ProductOutputGetSerializer(result_page, many=True)
+        
+        return paginator.get_paginated_response(serializer.data)
 
-
-# class ProductOutputCreateAPIView(generics.CreateAPIView):
-#     serializer_class = ProductOutputSerializer
-
-#     def perform_create(self, serializer):
-#         # Remove output quantity from the product quantity
-#         product_id = serializer.validated_data['product'].id
-#         output_quantity = serializer.validated_data['output_quantity']
-#         product = Product.objects.get(pk=product_id)
-#         if product.quantity < output_quantity:
-#             return Response({"error": "Not enough quantity available"}, status=status.HTTP_400_BAD_REQUEST)
-#         product.quantity -= output_quantity
-#         product.save()
-
-#         # Create ProductOutput instance
-#         serializer.save()
-
-#         return Response(serializer.data, status=status.HTTP_201_CREATED)
-
-
-# class ProductInputAPIView(generics.ListAPIView):
-#     serializer_class = ProductInputSerializer
-#     authentication_classes = (JWTAuthentication,)
-
-#     def get_queryset(self):
-#         if isinstance(self.request.user, User):
-#             return ProductInput.objects.all()
-
-#         password = self.request.headers.get('password')
-#         report_code = ReportCode.objects.last()
-#         if report_code and password == report_code.password:
-#             return ProductInput.objects.all()
-#         else:
-#             return None
-
-#     def list(self, request, *args, **kwargs):
-#         queryset = self.get_queryset()
-#         if queryset is None:
-#             return Response("Error: Not allowed", status=status.HTTP_405_METHOD_NOT_ALLOWED)
-#         serializer = self.get_serializer(queryset, many=True)
-#         return Response(serializer.data)
-
-
-# class ProductOutputAPIView(generics.ListAPIView):
-#     serializer_class = ProductOutputSerializer
-#     authentication_classes = (JWTAuthentication,)
-
-#     def get_queryset(self):
-#         if isinstance(self.request.user, User):
-#             return ProductOutput.objects.all()
-#         password = self.request.headers.get('password')
-#         report_code = ReportCode.objects.last()
-#         if report_code and password == report_code.password:
-#             return ProductOutput.objects.all()
-#         else:
-#             return None
-
-#     def list(self, request, *args, **kwargs):
-#         queryset = self.get_queryset()
-#         if queryset is None:
-#             return Response("Error: Not allowed", status=status.HTTP_405_METHOD_NOT_ALLOWED)
-#         serializer = self.get_serializer(queryset, many=True)
-#         return Response(serializer.data)
