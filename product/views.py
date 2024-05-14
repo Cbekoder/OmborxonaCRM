@@ -10,7 +10,7 @@ import random
 from .serializers import (CategorySerializer, UnitSerializer,
                           ProductSerializer, ProductOutputSerializer,
                           ProductInputSerializer, ProductInputGetSerializer,
-                          ProductOutputGetSerializer)
+                          ProductOutputGetSerializer, ProductCreateSerializer)
 
 
 class CategoryViewSet(viewsets.ModelViewSet):
@@ -45,7 +45,7 @@ class ProductViewSet(viewsets.ModelViewSet):
 
             # Check if the generated barcode number already exists
             if not Product.objects.filter(prod_code=barcode_number).exists():
-                return barcode_number
+                return str(barcode_number)
 
         # If max_attempts reached without finding a unique barcode number, raise an exception or handle the situation
         raise Exception("Failed to generate a unique EAN-13 barcode number after max attempts")
@@ -60,7 +60,7 @@ class ProductViewSet(viewsets.ModelViewSet):
         # Concatenate the first 12 digits with the check digit
         ean13_barcode_number = first_12_digits + str(check_digit)
 
-        return ean13_barcode_number
+        return str(ean13_barcode_number)
 
     def _calculate_ean13_check_digit(self, first_12_digits):
         # Calculate the check digit using the EAN-13 algorithm
@@ -71,35 +71,6 @@ class ProductViewSet(viewsets.ModelViewSet):
 
         return check_digit
 
-
-# class ProductInputCreateAPIView(generics.CreateAPIView):
-#     serializer_class = ProductInputSerializer
-
-#     def perform_create(self, serializer):
-#         product_id = serializer.validated_data['product'].id
-#         input_quantity = serializer.validated_data['input_quantity']
-#         product = Product.objects.get(pk=product_id)
-#         product.quantity += input_quantity
-
-#         product.save()
-
-#         serializer.save()
-
-#         return Response(serializer.data, status=status.HTTP_201_CREATED)
-    
-# class ProductInputDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
-#     queryset = ProductInput.objects.all()
-#     serializer_class = ProductInputSerializer
-#     lookup_field = 'product_id'
-
-#     def get_queryset(self):
-#         queryset = super().get_queryset()
-#         product_id = self.kwargs.get('pk')
-#         if product_id:
-#             queryset = queryset.filter(product_id=product_id)
-#         return queryset
-
-# class ProductInputRetrieveUpdateDestroyAPIView(generics.RetrieveUpdateDestroyAPIView):
 #     queryset = ProductInput.objects.all()
 #     serializer_class = ProductInputSerializer
 
@@ -131,6 +102,7 @@ class ProductInputList(APIView):
                 # Update the related Product instance
                 product = Product.objects.get(pk=product_id)
                 product.quantity += input_quantity
+            
                 product.save()
                 return Response(serializer.data, status=status.HTTP_201_CREATED)
             return Response({"Xabar": "Noto'g'ri miqdor!"}, status=status.HTTP_400_BAD_REQUEST)
@@ -167,6 +139,18 @@ class ProductInputDetail(APIView):
     #     product_input.delete()
     #     return Response(status=status.HTTP_204_NO_CONTENT)
     
+
+class ProductByCode(APIView):
+    def get(self, request):
+        prod_code = request.query_params.get('prod_code')
+        if not prod_code:
+            return Response({"Xabar": "Maxsulot kodi berilmadi"}, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            product = Product.objects.get(prod_code=prod_code)
+        except Product.DoesNotExist:
+            return Response({"Xabar": "Maxsulot topilmadi"}, status=status.HTTP_404_NOT_FOUND)
+        serializer = ProductSerializer(product)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 class ProductInputListByProduct(APIView):
     """
