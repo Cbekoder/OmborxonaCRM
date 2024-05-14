@@ -71,35 +71,6 @@ class ProductViewSet(viewsets.ModelViewSet):
 
         return check_digit
 
-
-# class ProductInputCreateAPIView(generics.CreateAPIView):
-#     serializer_class = ProductInputSerializer
-
-#     def perform_create(self, serializer):
-#         product_id = serializer.validated_data['product'].id
-#         input_quantity = serializer.validated_data['input_quantity']
-#         product = Product.objects.get(pk=product_id)
-#         product.quantity += input_quantity
-
-#         product.save()
-
-#         serializer.save()
-
-#         return Response(serializer.data, status=status.HTTP_201_CREATED)
-    
-# class ProductInputDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
-#     queryset = ProductInput.objects.all()
-#     serializer_class = ProductInputSerializer
-#     lookup_field = 'product_id'
-
-#     def get_queryset(self):
-#         queryset = super().get_queryset()
-#         product_id = self.kwargs.get('pk')
-#         if product_id:
-#             queryset = queryset.filter(product_id=product_id)
-#         return queryset
-
-# class ProductInputRetrieveUpdateDestroyAPIView(generics.RetrieveUpdateDestroyAPIView):
 #     queryset = ProductInput.objects.all()
 #     serializer_class = ProductInputSerializer
 

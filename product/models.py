@@ -43,7 +43,6 @@ class ProductInput(models.Model):
     @property
     def all_quantity(self): # kirgandan keyingi qoldiq
         result = self.product.quantity + self.input_quantity
-        self.product.save()
         return result
             
     def __str__(self):
