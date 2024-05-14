@@ -8,7 +8,8 @@ from rest_framework_simplejwt.views import (
 urlpatterns = [
     path('token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
-    path('yangi-omborchi/', OmborchiCreateAPIView.as_view()),
     path('omborchilar/', OmborchiAPIView.as_view()),
+    path('omborchi/new/', OmborchiCreateAPIView.as_view()),
+    path('omborchi/update/<int:pk>', OmborchiUpdateAPIView.as_view(), name='omborchi-update'),
     path('report-code/', ReportCodeView.as_view(), name='report-code'),
 ]

@@ -21,7 +21,6 @@ class ReportAPIView(generics.RetrieveAPIView):
         if date_str and (start_date_str or end_date_str):
             return Response({'error': 'Cannot use both date and start_date/end_date parameters simultaneously'},
                             status=status.HTTP_400_BAD_REQUEST)
-
         if date_str:
             try:
                 date = make_aware(datetime.strptime(date_str, '%Y-%m-%d'))
@@ -78,22 +77,22 @@ class ReportAPIView(generics.RetrieveAPIView):
                 beginning_quantity, beginning_price, goods_in_quantity, goods_in_price,
                 goods_out_quantity, goods_out_price, last_quantity, last_price
             ]):
+
                 continue
 
             product_report = {
                 'product_name': product.name,
                 'product_code': product.prod_code,
                 'product_unit': product.unit.name,
-                'beginning_quantity': beginning_quantity,
-                'beginning_price': beginning_price,
-                'goods_in_quantity': goods_in_quantity,
-                'goods_in_price': goods_in_price,
-                'goods_out_quantity': goods_out_quantity,
-                'goods_out_price': goods_out_price,
+                'first_quantity': beginning_quantity,
+                'first_price': beginning_price,
+                'in_quantity': goods_in_quantity,
+                'in_price': goods_in_price,
+                'out_quantity': goods_out_quantity,
+                'out_price': goods_out_price,
                 'last_quantity': last_quantity,
                 'last_price': last_price,
             }
-
             report_data.append(product_report)
 
         return report_data
