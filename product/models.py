@@ -5,7 +5,7 @@ class Category(models.Model):
     class Meta:
         verbose_name = 'Kategoriya'
         verbose_name_plural = 'Kategoriyalar'
-    name = models.CharField(max_length=50)
+    name = models.CharField(max_length=50, unique=True)
     def __str__(self):
         return self.name
 
@@ -13,7 +13,7 @@ class Unit(models.Model):
     class Meta:
         verbose_name = "O'lchov"
         verbose_name_plural = "O'lchovlar"
-    name = models.CharField(max_length=50)
+    name = models.CharField(max_length=50, unique=True)
     def __str__(self):
         return self.name
 

@@ -1,4 +1,5 @@
 from rest_framework import viewsets, status, generics
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from users.permissions import IsBuxgalterUser, IsOmborchiUser
@@ -17,16 +18,19 @@ from .serializers import (CategorySerializer, UnitSerializer,
 class CategoryViewSet(viewsets.ModelViewSet):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
+    permission_classes = [IsAuthenticated,]
 
 
 class UnitViewSet(viewsets.ModelViewSet):
     queryset = Unit.objects.all()
     serializer_class = UnitSerializer
+    permission_classes = [IsAuthenticated,]
 
 
 class ProductViewSet(viewsets.ModelViewSet):
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
+    permission_classes = [IsAuthenticated,]
 
     def perform_create(self, serializer):
         # Generate EAN-13 barcode number
@@ -75,6 +79,7 @@ class ProductViewSet(viewsets.ModelViewSet):
 
 
 class ProductInputList(APIView):
+    permission_classes = [IsAuthenticated,]
     """
     List all product inputs or create a new one.
     """
@@ -107,6 +112,7 @@ class ProductInputList(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class ProductInputDetail(APIView):
+    permission_classes = [IsAuthenticated,]
     """
     Retrieve, update or delete a product input instance.
     """
@@ -139,6 +145,7 @@ class ProductInputDetail(APIView):
     
 
 class ProductByCode(APIView):
+    permission_classes = [IsAuthenticated,]
     def get(self, request):
         prod_code = request.query_params.get('prod_code')
         if not prod_code:
@@ -151,6 +158,7 @@ class ProductByCode(APIView):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 class ProductInputListByProduct(APIView):
+    permission_classes = [IsAuthenticated,]
     """
     Retrieve all inputs for a specific product.
     """
@@ -167,6 +175,7 @@ class ProductInputListByProduct(APIView):
 
                                                                             # OUTPUT
 class ProductOutputList(APIView):
+    permission_classes = [IsAuthenticated,]
     """
     List all product inputs or create a new one.
     """
@@ -198,6 +207,7 @@ class ProductOutputList(APIView):
 
 
 class ProductOutputtDetail(APIView):
+    permission_classes = [IsAuthenticated,]
     """
     Retrieve, update or delete a product input instance.
     """
@@ -230,6 +240,7 @@ class ProductOutputtDetail(APIView):
     
 
 class ProductOutputListByProduct(APIView):
+    permission_classes = [IsAuthenticated,]
     """
     Retrieve all inputs for a specific product.
     """
