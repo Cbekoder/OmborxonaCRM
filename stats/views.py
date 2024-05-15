@@ -1,19 +1,36 @@
-from rest_framework import generics, status
-from rest_framework.response import Response
-from product.models import Product, ProductInput, ProductOutput, Category
-from .serializers import ReportSerializer
-from django.db.models import Sum, Q
-from datetime import datetime
+from rest_framework.permissions import IsAuthenticated
+from django.http import JsonResponse
 from django.utils.timezone import make_aware
+from datetime import datetime
+from django.db.models import Sum
+from rest_framework.views import APIView
+from rest_framework import status
+from django.db.models import Q
+from rest_framework_simplejwt.authentication import JWTAuthentication
 
-class ReportAPIView(generics.RetrieveAPIView):
+from product.models import Product, ProductInput, ProductOutput
+from users.models import ReportCode
+from .serializers import ReportSerializer
+from rest_framework.response import Response
+
+class ReportAPIView(APIView):
     serializer_class = ReportSerializer
-    queryset = None
-
-    def get_queryset(self):
-        return None
+    authentication_classes = [JWTAuthentication]
 
     def get(self, request, *args, **kwargs):
+        token = request.headers.get('Authorization')
+        password = request.headers.get('password')
+
+        if token:
+            report_data = self.get_report_with_token(request)
+            return Response(report_data)
+        elif password:
+            report_data = self.get_report_with_password(password)
+            return Response(report_data)
+        else:
+            return JsonResponse({'error': 'Unauthorized'}, status=status.HTTP_401_UNAUTHORIZED)
+
+    def get_report_with_token(self, request):
         date_str = request.GET.get('date')
         start_date_str = request.GET.get('start_date')
         end_date_str = request.GET.get('end_date')
@@ -54,7 +71,7 @@ class ReportAPIView(generics.RetrieveAPIView):
                     productoutput__created_at__date=date
                 )
             except ValueError:
-                return Response({'error': 'Invalid date format'}, status=status.HTTP_400_BAD_REQUEST)
+                return {'error': 'Invalid date format'}
 
         elif start_date_str and end_date_str:
             try:
@@ -65,11 +82,19 @@ class ReportAPIView(generics.RetrieveAPIView):
                     productoutput__created_at__range=(start_date, end_date)
                 )
             except ValueError:
-                return Response({'error': 'Invalid date format'}, status=status.HTTP_400_BAD_REQUEST)
+                return {'error': 'Invalid date format'}
 
         report_data = self.generate_report_data(products)
-        serializer = self.serializer_class(report_data, many=True)
-        return Response(serializer.data)
+        return report_data
+
+    def get_report_with_password(self, password):
+        last_password = ReportCode.objects.last().password
+        if password == last_password:
+            products = Product.objects.all()
+            report_data = self.generate_report_data(products)
+            return report_data
+        else:
+            return {'error': 'Invalid password'}
 
     def generate_report_data(self, products):
         report_data = []
