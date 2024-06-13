@@ -16,7 +16,7 @@ class UserListSerializer(serializers.ModelSerializer):
 class UserCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['username', 'password', 'first_name', 'last_name']
+        fields = ['id', 'username', 'password', 'first_name', 'last_name']
 
     def create(self, validated_data):
         validated_data['position'] = 1  # Ensure position is 'omborchi'

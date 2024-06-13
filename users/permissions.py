@@ -5,7 +5,9 @@ class IsBuxgalterUser(BasePermission):
     Custom permission to allow only users with position 'bugalter' to create users with position 'omborchi'.
     """
     def has_permission(self, request, view):
-        return request.user.position == 0
+        if request.user.is_authenticated:
+            return request.user.position == 0
+        return False
 
 
 class IsOmborchiUser(BasePermission):

@@ -1,3 +1,6 @@
+from django.shortcuts import get_object_or_404
+from drf_yasg.utils import swagger_auto_schema
+from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAuthenticated
 from django.http import JsonResponse
 from django.utils.timezone import make_aware
@@ -9,14 +12,78 @@ from django.db.models import Q
 from rest_framework_simplejwt.authentication import JWTAuthentication
 
 from product.models import Product, ProductInput, ProductOutput
+from product.serializers import ProductInputGetSerializer, ProductOutputGetSerializer
 from users.models import ReportCode
 from .serializers import ReportSerializer
 from rest_framework.response import Response
 
+#### INPUT STATS ####
+class ProductInputsListAPIView(APIView):
+    """
+    List all product inputs or create a new one.
+    """
+    permission_classes = [IsAuthenticated, ]
+    @swagger_auto_schema(tags=['Statistics'])
+    def get(self, request):
+        paginator = PageNumberPagination()
+        paginator.page_size = 10
+
+        product_inputs = ProductInput.objects.all()
+        result_page = paginator.paginate_queryset(product_inputs, request)
+        serializer = ProductInputGetSerializer(result_page, many=True)
+        return paginator.get_paginated_response(serializer.data)
+
+class ProductInputListByProduct(APIView):
+    permission_classes = [IsAuthenticated,]
+    @swagger_auto_schema(tags=['Statistics'])
+    def get(self, request, product_id, format=None):
+        # Filter inputs by the specified product_id
+        product_inputs = ProductInput.objects.filter(product_id=product_id)
+        paginator = PageNumberPagination()
+        paginator.page_size = 10
+        result_page = paginator.paginate_queryset(product_inputs, request)
+        serializer = ProductInputGetSerializer(result_page, many=True)
+        return paginator.get_paginated_response(serializer.data)
+
+
+#### OUTPUTS ####
+class ProductOutputsListAPIView(APIView):
+    """
+    List all product inputs or create a new one.
+    """
+    permission_classes = [IsAuthenticated, ]
+    @swagger_auto_schema(tags=['Statistics'])
+    def get(self, request):
+        paginator = PageNumberPagination()
+        paginator.page_size = 10
+        product_outputs = ProductOutput.objects.all()
+        result_page = paginator.paginate_queryset(product_outputs, request)
+        serializer = ProductOutputGetSerializer(result_page, many=True)
+        return paginator.get_paginated_response(serializer.data)
+
+class ProductOutputListByProduct(APIView):
+    permission_classes = [IsAuthenticated, ]
+    """
+    Retrieve all inputs for a specific product.
+    """
+    @swagger_auto_schema(tags=['Statistics'])
+
+    def get(self, request, product_id, format=None):
+        # Filter inputs by the specified product_id
+        product_output = ProductOutput.objects.filter(product_id=product_id)
+        paginator = PageNumberPagination()
+        paginator.page_size = 10
+        result_page = paginator.paginate_queryset(product_output, request)
+        serializer = ProductOutputGetSerializer(result_page, many=True)
+
+        return paginator.get_paginated_response(serializer.data)
+
+
+#### REPORT ####
 class ReportAPIView(APIView):
     serializer_class = ReportSerializer
     authentication_classes = [JWTAuthentication]
-
+    @swagger_auto_schema(tags=['Statistics'])
     def get(self, request, *args, **kwargs):
         token = request.headers.get('Authorization')
         password = request.headers.get('password')

@@ -46,7 +46,7 @@ class ProductInput(models.Model):
         return result
             
     def __str__(self):
-        return self.product.name or None
+        return self.product.name if self.product else "default"
 
 class ProductOutput(models.Model):
     class Meta:

@@ -21,4 +21,14 @@ class UserAdmin(BaseUserAdmin):
     ordering = ('username',)
 
 admin.site.register(User, UserAdmin)
+# @admin.register(ReportCode)
+# class ReportCodeAdmin(admin.ModelAdmin):
+#     list_display = ('code',)
+#
+#     def has_add_permission(self, request):
+#         return False
+#
+#     def has_delete_permission(self, request, obj=None):
+#         return False
+
 admin.site.register(ReportCode)
