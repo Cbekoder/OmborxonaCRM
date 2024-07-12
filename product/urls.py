@@ -13,7 +13,7 @@ urlpatterns = [
     # products
     path('products/', ProductsAPIView.as_view(), name='products-list-create'),
     path('product/<int:p>', ProductAPIView.as_view(), name='product-detail-put-patch-delete'),
-    path('product-code/<str:prod_code>', ProductByCode.as_view()),
+    # path('product-code/<str:prod_code>', ProductByCode.as_view()),
     # Input
     path('input/', ProductInputsAPIView.as_view(), name='products-list-create'),
     # path('input/<int:pk>/', ProductInputDetail.as_view(), name='input-detail'), # returns one input by ID

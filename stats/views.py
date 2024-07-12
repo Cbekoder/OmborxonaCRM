@@ -1,18 +1,19 @@
 from django.shortcuts import get_object_or_404
+from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAuthenticated
 from django.http import JsonResponse
 from django.utils.timezone import make_aware
 from datetime import datetime
-from django.db.models import Sum
+from django.db.models import Sum, F
 from rest_framework.views import APIView
 from rest_framework import status
 from django.db.models import Q
 from rest_framework_simplejwt.authentication import JWTAuthentication
 
 from product.models import Product, ProductInput, ProductOutput
-from product.serializers import ProductInputGetSerializer, ProductOutputGetSerializer
+from product.serializers import ProductInputGetSerializer, ProductOutputGetSerializer, CombinedProductSerializer
 from users.models import ReportCode
 from .serializers import ReportSerializer
 from rest_framework.response import Response
@@ -23,67 +24,95 @@ class ProductInputsListAPIView(APIView):
     List all product inputs or create a new one.
     """
     permission_classes = [IsAuthenticated, ]
-    @swagger_auto_schema(tags=['Statistics'])
+
+    @swagger_auto_schema(tags=['Statistics'], manual_parameters=[
+        openapi.Parameter('product_id', openapi.IN_QUERY, description="Filter by product ID", type=openapi.TYPE_INTEGER),
+    ])
     def get(self, request):
-        paginator = PageNumberPagination()
-        paginator.page_size = 10
-
         product_inputs = ProductInput.objects.all()
-        result_page = paginator.paginate_queryset(product_inputs, request)
-        serializer = ProductInputGetSerializer(result_page, many=True)
-        return paginator.get_paginated_response(serializer.data)
 
-class ProductInputListByProduct(APIView):
-    permission_classes = [IsAuthenticated,]
-    @swagger_auto_schema(tags=['Statistics'])
-    def get(self, request, product_id, format=None):
-        # Filter inputs by the specified product_id
-        product_inputs = ProductInput.objects.filter(product_id=product_id)
-        paginator = PageNumberPagination()
-        paginator.page_size = 10
-        result_page = paginator.paginate_queryset(product_inputs, request)
-        serializer = ProductInputGetSerializer(result_page, many=True)
-        return paginator.get_paginated_response(serializer.data)
+        # Filter by product_id if provided in query parameters
+        product_id = request.query_params.get('product_id')
+        if product_id:
+            product_inputs = product_inputs.filter(product_id=product_id)
+
+        serializer = ProductInputGetSerializer(product_inputs, many=True)
+        return Response(serializer.data)
 
 
 #### OUTPUTS ####
+
 class ProductOutputsListAPIView(APIView):
     """
-    List all product inputs or create a new one.
+    List all product outputs or create a new one.
     """
     permission_classes = [IsAuthenticated, ]
-    @swagger_auto_schema(tags=['Statistics'])
+
+    @swagger_auto_schema(tags=['Statistics'], manual_parameters=[
+        openapi.Parameter('product_id', openapi.IN_QUERY, description="Filter by product ID", type=openapi.TYPE_INTEGER),
+    ])
     def get(self, request):
-        paginator = PageNumberPagination()
-        paginator.page_size = 10
         product_outputs = ProductOutput.objects.all()
-        result_page = paginator.paginate_queryset(product_outputs, request)
-        serializer = ProductOutputGetSerializer(result_page, many=True)
-        return paginator.get_paginated_response(serializer.data)
 
-class ProductOutputListByProduct(APIView):
+        # Filter by product_id if provided in query parameters
+        product_id = request.query_params.get('product_id')
+        if product_id:
+            product_outputs = product_outputs.filter(product_id=product_id)
+
+        serializer = ProductOutputGetSerializer(product_outputs, many=True)
+        return Response(serializer.data)
+
+
+class CombinedProductListAPIView(APIView):
+    """
+    List all product inputs and outputs, optionally filtered by product_id, ordered by datetime.
+    """
     permission_classes = [IsAuthenticated, ]
-    """
-    Retrieve all inputs for a specific product.
-    """
-    @swagger_auto_schema(tags=['Statistics'])
 
-    def get(self, request, product_id, format=None):
-        # Filter inputs by the specified product_id
-        product_output = ProductOutput.objects.filter(product_id=product_id)
-        paginator = PageNumberPagination()
-        paginator.page_size = 10
-        result_page = paginator.paginate_queryset(product_output, request)
-        serializer = ProductOutputGetSerializer(result_page, many=True)
+    @swagger_auto_schema(tags=['Statistics'], manual_parameters=[
+        openapi.Parameter('product_id', openapi.IN_QUERY, description="Filter by product ID", type=openapi.TYPE_INTEGER),
+    ])
+    def get(self, request):
+        product_id = request.query_params.get('product_id')
 
-        return paginator.get_paginated_response(serializer.data)
+        # Get all ProductInput and ProductOutput, optionally filtered by product_id
+        product_inputs = ProductInput.objects.all()
+        product_outputs = ProductOutput.objects.all()
+
+        if product_id:
+            product_inputs = product_inputs.filter(product_id=product_id)
+            product_outputs = product_outputs.filter(product_id=product_id)
+
+        # Annotate each queryset with a 'type' field to distinguish them
+        product_inputs = product_inputs.annotate(type=F('input_quantity'))
+        product_outputs = product_outputs.annotate(type=F('output_quantity'))
+
+        # Combine and order the querysets by created_at
+        combined_queryset = list(product_inputs) + list(product_outputs)
+        combined_queryset.sort(key=lambda x: x.created_at)
+
+        # Serialize the combined queryset
+        serializer = CombinedProductSerializer(combined_queryset, many=True)
+        return Response(serializer.data)
+
 
 
 #### REPORT ####
 class ReportAPIView(APIView):
     serializer_class = ReportSerializer
     authentication_classes = [JWTAuthentication]
-    @swagger_auto_schema(tags=['Statistics'])
+
+    @swagger_auto_schema(
+        tags=['Statistics'],
+        manual_parameters=[
+            openapi.Parameter('date', openapi.IN_QUERY, description="Date in format 'YYYY-MM-DD'", type=openapi.TYPE_STRING),
+            openapi.Parameter('start_date', openapi.IN_QUERY, description="Start date in format 'YYYY-MM-DD'", type=openapi.TYPE_STRING),
+            openapi.Parameter('end_date', openapi.IN_QUERY, description="End date in format 'YYYY-MM-DD'", type=openapi.TYPE_STRING),
+            openapi.Parameter('category', openapi.IN_QUERY, description="Category ID", type=openapi.TYPE_INTEGER),
+            openapi.Parameter('order_by', openapi.IN_QUERY, description="Order by field", type=openapi.TYPE_STRING, enum=['category', 'name', 'price', 'quantity']),
+            openapi.Parameter('search', openapi.IN_QUERY, description="Search query", type=openapi.TYPE_STRING),
+        ]
+    )
     def get(self, request, *args, **kwargs):
         token = request.headers.get('Authorization')
         password = request.headers.get('password')
@@ -95,15 +124,15 @@ class ReportAPIView(APIView):
             report_data = self.get_report_with_password(password)
             return Response(report_data)
         else:
-            return JsonResponse({'error': 'Unauthorized'}, status=status.HTTP_401_UNAUTHORIZED)
+            return Response({'error': 'Unauthorized'}, status=status.HTTP_401_UNAUTHORIZED)
 
     def get_report_with_token(self, request):
-        date_str = request.GET.get('date')
-        start_date_str = request.GET.get('start_date')
-        end_date_str = request.GET.get('end_date')
-        category_id = request.GET.get('category')
-        order_by = request.GET.get('order_by')
-        search_query = request.GET.get('search')
+        date_str = request.query_params.get('date')
+        start_date_str = request.query_params.get('start_date')
+        end_date_str = request.query_params.get('end_date')
+        category_id = request.query_params.get('category')
+        order_by = request.query_params.get('order_by')
+        search_query = request.query_params.get('search')
 
         products = Product.objects.all()
 
@@ -152,7 +181,7 @@ class ReportAPIView(APIView):
                 return {'error': 'Invalid date format'}
 
         report_data = self.generate_report_data(products)
-        return report_data
+        return Response(report_data)
 
     def get_report_with_password(self, password):
         last_password = ReportCode.objects.last().password

@@ -1,4 +1,5 @@
 from django.shortcuts import get_object_or_404
+from drf_yasg import openapi
 from rest_framework import viewsets, status, generics
 from rest_framework.exceptions import NotFound
 from rest_framework.permissions import IsAuthenticated
@@ -144,11 +145,30 @@ class UnitAPIView(APIView):
 #### PRODUCTS ####
 class ProductsAPIView(APIView):
     permission_classes = [IsAuthenticated]
-    @swagger_auto_schema(tags=['Products'])
+
+    @swagger_auto_schema(
+        tags=['Products'],
+        manual_parameters=[
+            openapi.Parameter('prod_code', openapi.IN_QUERY, description="Product Code", type=openapi.TYPE_STRING),
+            # openapi.Parameter('prod_id', openapi.IN_QUERY, description="Product ID", type=openapi.TYPE_INTEGER)
+        ]
+    )
     def get(self, request):
-        products = Product.objects.all()
-        serializer = ProductSerializer(products, many=True)
-        return Response(serializer.data, status=200)
+        prod_code = request.query_params.get('prod_code')
+        # prod_id = request.query_params.get('prod_id')
+        # if prod_code:
+        #     return Response({"error": "Only one of 'prod_code' or 'prod_id' should be provided."},
+        #                     status=status.HTTP_400_BAD_REQUEST)
+        if prod_code:
+            products = Product.objects.get(prod_code=prod_code)
+            serializer = ProductSerializer(products)
+        # elif prod_id:
+        #     products = Product.objects.get(id=prod_id)
+        #     serializer = ProductSerializer(products)
+        else:
+            products = Product.objects.all()
+            serializer = ProductSerializer(products, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
     @swagger_auto_schema(tags=['Products'], request_body=ProductSerializer)
     def post(self, request):
@@ -222,18 +242,19 @@ class ProductAPIView(APIView):
     @swagger_auto_schema(tags=['Products'], responses={204: 'No Content'})
     def delete(self, request, p, *args, **kwargs):
         product = self.get_object(p)
-        product.delete()
+        product.is_deleted = True
+        product.save()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
-class ProductByCode(APIView):
-    permission_classes = [IsAuthenticated,]
-    @swagger_auto_schema(tags=['Products'])
-    def get(self, request, prod_code):
-        if not prod_code:
-            return Response({"Xabar": "Maxsulot kodi berilmadi"}, status=status.HTTP_400_BAD_REQUEST)
-        product = get_object_or_404(Product, prod_code=str(prod_code))
-        serializer = ProductSerializer(product)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+# class ProductByCode(APIView):
+#     permission_classes = [IsAuthenticated,]
+#     @swagger_auto_schema(tags=['Products'])
+#     def get(self, request, prod_code):
+#         if not prod_code:
+#             return Response({"Xabar": "Maxsulot kodi berilmadi"}, status=status.HTTP_400_BAD_REQUEST)
+#         product = get_object_or_404(Product, prod_code=str(prod_code))
+#         serializer = ProductSerializer(product)
+#         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 #### INPUT OUTPUT ####

@@ -25,6 +25,7 @@ class Product(models.Model):
     quantity = models.DecimalField(default=0, max_digits=8, decimal_places=2, blank=True)
     unit = models.ForeignKey(Unit, on_delete=models.SET_NULL, null=True)
     prod_code = models.CharField(max_length=20)
+    is_deleted = models.BooleanField(default=False)
     
     def __str__(self):
         return self.name
@@ -33,17 +34,20 @@ class ProductInput(models.Model):
     class Meta:
         verbose_name = 'Kirim'
         verbose_name_plural = 'Kirimlar'
+
     product = models.ForeignKey(Product, on_delete=models.SET_NULL, null=True)
     input_quantity = models.DecimalField(default=0, max_digits=8, decimal_places=2)
+    all_quantity = models.DecimalField(default=0, max_digits=8, decimal_places=2) # chiqqandan keyingi qoldiq
     created_at = models.DateTimeField(auto_now_add=True)
     user_id = models.ForeignKey(User,
                                 on_delete=models.SET_NULL,
                                 null=True,
                                 related_name='product_input')
-    @property
-    def all_quantity(self): # kirgandan keyingi qoldiq
-        result = self.product.quantity + self.input_quantity
-        return result
+
+    def save(self, *args, **kwargs):
+        if self.pk is None:
+            self.all_quantity = self.product.quantity + self.input_quantity
+        super(ProductInput, self).save(*args, **kwargs)
             
     def __str__(self):
         return self.product.name if self.product else "default"
@@ -60,11 +64,10 @@ class ProductOutput(models.Model):
                                 on_delete=models.SET_NULL,
                                 null=True,
                                 related_name='product_output')
-    @property
-    def all_quantity(self): # chiqqandan keyingi qoldiq
-        result = self.product.quantity - self.output_quantity
-        self.product.save()
-        return result
+    def save(self, *args, **kwargs):
+        if self.pk is None:
+            self.all_quantity = self.product.quantity - self.output_quantity
+        super(ProductOutput, self).save(*args, **kwargs)
 
     def __str__(self):
         return self.product.name if self.product else "default"

@@ -1,15 +1,18 @@
 from rest_framework import serializers
 from .models import *
 
+
 class UnitSerializer(serializers.ModelSerializer):
     class Meta:
         model = Unit
         fields = '__all__'
 
+
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = Category
         fields = '__all__'
+
 
 class ProductSerializer(serializers.ModelSerializer):
     class Meta:
@@ -17,22 +20,26 @@ class ProductSerializer(serializers.ModelSerializer):
         fields = ['id', 'name', 'description', 'category', 'price', 'unit', 'prod_code', 'quantity']
         read_only_fields = ['prod_code']  # prod_code should be generated in the backend
 
+
 class ProductCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Product
         fields = ['name', 'description', 'category', 'price', 'unit']
         # Exclude 'prod_code' and 'quantity' as they are read-only or auto-generated
 
+
 class ProductUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Product
         fields = ['name', 'description', 'category', 'price', 'unit']
         read_only_fields = ['prod_code']  # prod_code should not be updated
-    
 
-                                                                    # INPUT
+        # INPUT
+
+
 class ProductInputSerializer(serializers.ModelSerializer):
     user_id = serializers.HiddenField(default=serializers.CurrentUserDefault())
+
     class Meta:
         model = ProductInput
         fields = ['id', 'product', 'input_quantity', 'user_id', "created_at"]
@@ -40,13 +47,14 @@ class ProductInputSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         # Retrieve the current user from the request context
         user = self.context['request'].user
-        
+
         # Set the current user as the user_id for the product input
         validated_data['user_id'] = user
-        
+
         # Create and return the ProductInput instance
         return super().create(validated_data)
-    
+
+
 class ProductInputGetSerializer(serializers.ModelSerializer):
     product_name = serializers.SerializerMethodField()
 
@@ -59,9 +67,12 @@ class ProductInputGetSerializer(serializers.ModelSerializer):
             return obj.product.name
         return None
 
-                                                        # OUTPUT
+        # OUTPUT
+
+
 class ProductOutputSerializer(serializers.ModelSerializer):
     user_id = serializers.HiddenField(default=serializers.CurrentUserDefault())
+
     class Meta:
         model = ProductOutput
         fields = ['id', 'product', 'output_quantity', 'user_id', "created_at"]
@@ -69,13 +80,13 @@ class ProductOutputSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         # Retrieve the current user from the request context
         user = self.context['request'].user
-        
+
         # Set the current user as the user_id for the product input
         validated_data['user_id'] = user
-        
+
         # Create and return the ProductInput instance
         return super().create(validated_data)
-    
+
 
 class ProductOutputGetSerializer(serializers.ModelSerializer):
     product_name = serializers.SerializerMethodField()
@@ -88,3 +99,12 @@ class ProductOutputGetSerializer(serializers.ModelSerializer):
         if obj.product:
             return obj.product.name
         return None
+
+class CombinedProductSerializer(serializers.Serializer):
+    id = serializers.IntegerField()
+    type = serializers.CharField()
+    product = serializers.CharField(source='product.name', allow_null=True)
+    quantity = serializers.DecimalField(max_digits=8, decimal_places=2)
+    all_quantity = serializers.DecimalField(max_digits=8, decimal_places=2)
+    created_at = serializers.DateTimeField()
+    user_id = serializers.PrimaryKeyRelatedField(read_only=True)
