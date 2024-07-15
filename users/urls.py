@@ -11,5 +11,6 @@ urlpatterns = [
     path('omborchilar/', OmborchiAPIView.as_view()),
     path('omborchi/new/', OmborchiCreateAPIView.as_view()),
     path('omborchi/update/<int:pk>', OmborchiUpdateAPIView.as_view(), name='omborchi-update'),
+    path('omborchi/detail/', OmborchiDetailAPIView.as_view(), name='omborchi-detail'),
     path('report-code/', ReportCodeView.as_view(), name='report-code'),
 ]

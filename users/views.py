@@ -1,12 +1,14 @@
 from django.shortcuts import get_object_or_404
+from drf_yasg import openapi
 from rest_framework import generics
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from drf_yasg.utils import swagger_auto_schema
 from .serializers import UserSerializer, UserCreateSerializer, ReportCodeSerializer, UserListSerializer, \
-    UserUpdateSerializer
+    UserUpdateSerializer, OmborchiDetailSerializer
 from .permissions import *
 from .models import *
 
@@ -40,9 +42,43 @@ class OmborchiUpdateAPIView(generics.UpdateAPIView):
     @swagger_auto_schema(tags=['Omborchi'])
     def put(self, request, *args, **kwargs):
         return super().put(request, *args, **kwargs)
+
     @swagger_auto_schema(tags=['Omborchi'])
     def patch(self, request, *args, **kwargs):
         return super().patch(request, *args, **kwargs)
+
+
+class OmborchiDetailAPIView(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    @swagger_auto_schema(tags=['Omborchi'],
+                         manual_parameters=[
+                             openapi.Parameter(
+                                 'id',
+                                 openapi.IN_QUERY,
+                                 description="Omborchi ID (Faqat Buxgalter user uchun)",
+                                 type=openapi.TYPE_INTEGER,
+                                 required=False
+                             )
+                         ])
+    def get(self, request):
+        # Check if the user is an Omborchi
+        if IsOmborchiUser().has_permission(request, self):
+            user = request.user
+        # Check if the user is a Buxgalter
+        elif IsBuxgalterUser().has_permission(request, self):
+            user_id = request.query_params.get('id', None)
+            if not user_id:
+                return Response({"error": "Buxgalter uchun Omborchi ID kiritish majburiy."}, status=400)
+            try:
+                user = User.objects.get(id=user_id, position=1)  # Assuming position=1 is for Omborchi
+            except User.DoesNotExist:
+                return Response({"error": "Berilgan ID bo'yicha Omborchi topilmadi."}, status=404)
+        else:
+            return Response({"error": "Unauthro"}, status=403)
+
+        user_serializer = OmborchiDetailSerializer(user)
+        return Response(user_serializer.data)
 
 
 class ReportCodeView(APIView):
