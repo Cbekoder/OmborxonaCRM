@@ -150,24 +150,25 @@ class ProductsAPIView(APIView):
         tags=['Products'],
         manual_parameters=[
             openapi.Parameter('prod_code', openapi.IN_QUERY, description="Product Code", type=openapi.TYPE_STRING),
+            openapi.Parameter('is_deleted', openapi.IN_QUERY, description="O'chirilgan mahsulotlarni ham qabul qilish", type=openapi.TYPE_BOOLEAN),
             # openapi.Parameter('prod_id', openapi.IN_QUERY, description="Product ID", type=openapi.TYPE_INTEGER)
         ]
     )
     def get(self, request):
         prod_code = request.query_params.get('prod_code')
-        # prod_id = request.query_params.get('prod_id')
-        # if prod_code:
-        #     return Response({"error": "Only one of 'prod_code' or 'prod_id' should be provided."},
-        #                     status=status.HTTP_400_BAD_REQUEST)
+        is_deleted = request.query_params.get('is_deleted')
+
         if prod_code:
-            products = Product.objects.get(prod_code=prod_code)
-            serializer = ProductSerializer(products)
-        # elif prod_id:
-        #     products = Product.objects.get(id=prod_id)
-        #     serializer = ProductSerializer(products)
-        else:
+            product = get_object_or_404(Product, prod_code=prod_code)
+            serializer = ProductSerializer(product)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+
+        if is_deleted:
             products = Product.objects.all()
-            serializer = ProductSerializer(products, many=True)
+        else:
+            products = Product.objects.filter(is_deleted=False)
+
+        serializer = ProductSerializer(products, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     @swagger_auto_schema(tags=['Products'], request_body=ProductSerializer)

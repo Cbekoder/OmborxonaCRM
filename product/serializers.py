@@ -17,7 +17,7 @@ class CategorySerializer(serializers.ModelSerializer):
 class ProductSerializer(serializers.ModelSerializer):
     class Meta:
         model = Product
-        fields = ['id', 'name', 'description', 'category', 'price', 'unit', 'prod_code', 'quantity']
+        fields = ['id', 'name', 'description', 'category', 'price', 'unit', 'prod_code', 'quantity', 'is_deleted']
         read_only_fields = ['prod_code']  # prod_code should be generated in the backend
 
 
