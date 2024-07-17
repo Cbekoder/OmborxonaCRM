@@ -1,13 +1,12 @@
 from django.shortcuts import get_object_or_404
 from drf_yasg import openapi
-from rest_framework import viewsets, status, generics
+from rest_framework import status
 from rest_framework.exceptions import NotFound
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from rest_framework_simplejwt.authentication import JWTAuthentication
-from users.permissions import IsBuxgalterUser, IsOmborchiUser
+# from rest_framework_simplejwt.authentication import JWTAuthentication
+# from users.permissions import IsBuxgalterUser, IsOmborchiUser
 from rest_framework.views import APIView
-from rest_framework.pagination import PageNumberPagination
 from django.http import Http404
 from drf_yasg.utils import swagger_auto_schema
 from .models import *
@@ -17,9 +16,12 @@ from .serializers import (CategorySerializer, UnitSerializer,
                           ProductSerializer, ProductOutputSerializer,
                           ProductInputSerializer, ProductInputGetSerializer,
                           ProductOutputGetSerializer, ProductCreateSerializer)
+
+
 #### CATEGORY ####
 class CategoriesAPIView(APIView):
     permission_classes = [IsAuthenticated]
+
     @swagger_auto_schema(tags=['Categories'])
     def get(self, request):
         categories = Category.objects.all()
@@ -34,6 +36,7 @@ class CategoriesAPIView(APIView):
             return Response(serializer.data, status=201)
         return Response(serializer.errors)
 
+
 class CategoryAPIView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -47,7 +50,7 @@ class CategoryAPIView(APIView):
         except Category.DoesNotExist:
             raise NotFound(detail="Category not found.")
 
-    @swagger_auto_schema(tags=['Categories'], responses={200: CategorySerializer})
+    @swagger_auto_schema(tags=['Categories'])
     def get(self, request, c, *args, **kwargs):
         """
         Retrieve a category by its pk.
@@ -56,7 +59,7 @@ class CategoryAPIView(APIView):
         serializer = CategorySerializer(category)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-    @swagger_auto_schema(tags=['Categories'], request_body=CategorySerializer, responses={200: CategorySerializer})
+    @swagger_auto_schema(tags=['Categories'], request_body=CategorySerializer)
     def put(self, request, c, *args, **kwargs):
 
         category = self.get_object(c)
@@ -88,7 +91,7 @@ class UnitsAPIView(APIView):
         serializer = UnitSerializer(units, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-    @swagger_auto_schema(tags=['Units'], request_body=UnitSerializer, responses={201: UnitSerializer})
+    @swagger_auto_schema(tags=['Units'], request_body=UnitSerializer)
     def post(self, request):
         """
         Create a new unit.
@@ -98,6 +101,7 @@ class UnitsAPIView(APIView):
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
 class UnitAPIView(APIView):
     permission_classes = [IsAuthenticated]
@@ -112,7 +116,7 @@ class UnitAPIView(APIView):
         except Unit.DoesNotExist:
             raise NotFound(detail="Unit not found.")
 
-    @swagger_auto_schema(tags=['Units'], responses={200: UnitSerializer})
+    @swagger_auto_schema(tags=['Units'])
     def get(self, request, u, *args, **kwargs):
         """
         Retrieve a unit by its pk.
@@ -121,7 +125,7 @@ class UnitAPIView(APIView):
         serializer = UnitSerializer(unit)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-    @swagger_auto_schema(tags=['Units'], request_body=UnitSerializer, responses={200: UnitSerializer})
+    @swagger_auto_schema(tags=['Units'], request_body=UnitSerializer)
     def put(self, request, u, *args, **kwargs):
         """
         Update a unit by its pk.
@@ -150,7 +154,8 @@ class ProductsAPIView(APIView):
         tags=['Products'],
         manual_parameters=[
             openapi.Parameter('prod_code', openapi.IN_QUERY, description="Product Code", type=openapi.TYPE_STRING),
-            openapi.Parameter('is_deleted', openapi.IN_QUERY, description="O'chirilgan mahsulotlarni ham qabul qilish", type=openapi.TYPE_BOOLEAN),
+            openapi.Parameter('is_deleted', openapi.IN_QUERY, description="O'chirilgan mahsulotlarni ham qabul qilish",
+                              type=openapi.TYPE_BOOLEAN),
             # openapi.Parameter('prod_id', openapi.IN_QUERY, description="Product ID", type=openapi.TYPE_INTEGER)
         ]
     )
@@ -171,9 +176,9 @@ class ProductsAPIView(APIView):
         serializer = ProductSerializer(products, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-    @swagger_auto_schema(tags=['Products'], request_body=ProductSerializer)
+    @swagger_auto_schema(tags=['Products'], request_body=ProductCreateSerializer)
     def post(self, request):
-        serializer = ProductSerializer(data=request.data)
+        serializer = ProductCreateSerializer(data=request.data)
         barcode_number = self.generate_unique_ean13_barcode_number()
         if serializer.is_valid():
             serializer.validated_data['prod_code'] = barcode_number
@@ -201,6 +206,7 @@ class ProductsAPIView(APIView):
         total_sum = odd_sum + even_sum
         check_digit = (10 - (total_sum % 10)) % 10
         return check_digit
+
 
 class ProductAPIView(APIView):
     permission_classes = [IsAuthenticated]
@@ -247,6 +253,7 @@ class ProductAPIView(APIView):
         product.save()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
+
 # class ProductByCode(APIView):
 #     permission_classes = [IsAuthenticated,]
 #     @swagger_auto_schema(tags=['Products'])
@@ -263,7 +270,8 @@ class ProductInputsAPIView(APIView):
     """
     List all product inputs or create a new one.
     """
-    permission_classes = [IsAuthenticated,]
+    permission_classes = [IsAuthenticated, ]
+
     @swagger_auto_schema(tags=['Product-Input-Output'], request_body=ProductInputSerializer)
     def post(self, request):
         serializer = ProductInputSerializer(data=request.data, context={'request': request})
@@ -275,17 +283,19 @@ class ProductInputsAPIView(APIView):
                 product_input = serializer.save(user_id=user_id)
                 product = Product.objects.get(pk=product_id)
                 product.quantity += input_quantity
-            
+
                 product.save()
                 return Response(serializer.data, status=status.HTTP_201_CREATED)
             return Response({"Xabar": "Noto'g'ri miqdor!"}, status=status.HTTP_400_BAD_REQUEST)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+
 class ProductOutputAPIView(APIView):
-    permission_classes = [IsAuthenticated,]
+    permission_classes = [IsAuthenticated, ]
     """
     List all product inputs or create a new one.
     """
+
     @swagger_auto_schema(tags=['Product-Input-Output'], request_body=ProductOutputSerializer)
     def post(self, request):
         serializer = ProductOutputSerializer(data=request.data, context={'request': request})
@@ -303,5 +313,3 @@ class ProductOutputAPIView(APIView):
                 return Response(serializer.data, status=status.HTTP_201_CREATED)
             return Response({"Xabar": "Noto'g'ri miqdor!"}, status=status.HTTP_400_BAD_REQUEST)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-
