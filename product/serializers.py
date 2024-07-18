@@ -38,6 +38,7 @@ class ProductUpdateSerializer(serializers.ModelSerializer):
 class ProductDetailInputOutputSerializer(serializers.ModelSerializer):
     unit = serializers.SerializerMethodField()
     category = serializers.SerializerMethodField()
+
     class Meta:
         model = Product
         fields = ['name', 'prod_code', 'unit', 'category', 'price']
@@ -47,6 +48,23 @@ class ProductDetailInputOutputSerializer(serializers.ModelSerializer):
 
     def get_category(self, obj):
         return obj.category.name
+
+
+class ProductReportSerializer(serializers.ModelSerializer):
+    unit = serializers.SerializerMethodField()
+    category = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Product
+        fields = ['id', 'name', 'prod_code', 'unit', 'price', 'category']
+
+    def get_unit(self, obj):
+        return obj.unit.name
+
+    def get_category(self, obj):
+        return obj.category.name
+
+
 # INPUT
 
 
@@ -85,6 +103,7 @@ class ProductInputGetSerializer(serializers.ModelSerializer):
         return obj.user_id.first_name + ' ' + obj.user_id.last_name
         # return obj.user_id.username
 
+
 # OUTPUT
 
 
@@ -116,6 +135,7 @@ class ProductOutputGetSerializer(serializers.ModelSerializer):
 
     def get_user(self, obj):
         return obj.user_id.first_name + ' ' + obj.user_id.last_name
+
 
 class CombinedProductSerializer(serializers.Serializer):
     id = serializers.IntegerField()

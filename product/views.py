@@ -9,6 +9,8 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.http import Http404
 from drf_yasg.utils import swagger_auto_schema
+
+from users.permissions import IsStaffUser
 from .models import *
 from users.models import ReportCode
 import random
@@ -20,7 +22,7 @@ from .serializers import (CategorySerializer, UnitSerializer,
 
 #### CATEGORY ####
 class CategoriesAPIView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsStaffUser]
 
     @swagger_auto_schema(tags=['Categories'])
     def get(self, request):
@@ -38,7 +40,7 @@ class CategoriesAPIView(APIView):
 
 
 class CategoryAPIView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsStaffUser]
 
     def get_object(self, c):
         """
@@ -80,7 +82,7 @@ class CategoryAPIView(APIView):
 
 #### UNITS ####
 class UnitsAPIView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsStaffUser]
 
     @swagger_auto_schema(tags=['Units'])
     def get(self, request):
@@ -102,9 +104,8 @@ class UnitsAPIView(APIView):
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-
 class UnitAPIView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsStaffUser]
 
     def get_object(self, u):
         """
@@ -148,7 +149,7 @@ class UnitAPIView(APIView):
 
 #### PRODUCTS ####
 class ProductsAPIView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsStaffUser]
 
     @swagger_auto_schema(
         tags=['Products'],
@@ -209,7 +210,7 @@ class ProductsAPIView(APIView):
 
 
 class ProductAPIView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsStaffUser]
 
     def get_object(self, p):
         """
@@ -254,23 +255,12 @@ class ProductAPIView(APIView):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
-# class ProductByCode(APIView):
-#     permission_classes = [IsAuthenticated,]
-#     @swagger_auto_schema(tags=['Products'])
-#     def get(self, request, prod_code):
-#         if not prod_code:
-#             return Response({"Xabar": "Maxsulot kodi berilmadi"}, status=status.HTTP_400_BAD_REQUEST)
-#         product = get_object_or_404(Product, prod_code=str(prod_code))
-#         serializer = ProductSerializer(product)
-#         return Response(serializer.data, status=status.HTTP_200_OK)
-
-
 #### INPUT OUTPUT ####
 class ProductInputsAPIView(APIView):
     """
     List all product inputs or create a new one.
     """
-    permission_classes = [IsAuthenticated, ]
+    permission_classes = [IsStaffUser]
 
     @swagger_auto_schema(tags=['Product-Input-Output'], request_body=ProductInputSerializer)
     def post(self, request):
@@ -291,7 +281,7 @@ class ProductInputsAPIView(APIView):
 
 
 class ProductOutputAPIView(APIView):
-    permission_classes = [IsAuthenticated, ]
+    permission_classes = [IsStaffUser]
     """
     List all product inputs or create a new one.
     """
