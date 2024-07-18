@@ -9,7 +9,6 @@ class IsBuxgalterUser(BasePermission):
             return request.user.position == 0
         return False
 
-
 class IsOmborchiUser(BasePermission):
     """
     Custom permission to allow only users with position 'bugalter' to create users with position 'omborchi'.
@@ -17,12 +16,15 @@ class IsOmborchiUser(BasePermission):
     def has_permission(self, request, view):
         return request.user.position == 1
 
+class IsStaffUser(BasePermission):
+    def has_permission(self, request, view):
+        return request.user.position == 0 or request.user.position == 1
+
 class CanUpdateOmborchi(BasePermission):
     """
     Custom permission to allow omborchi to update their own data,
     and allow buxgalter to update any omborchi data.
     """
-
     def has_object_permission(self, request, view, obj):
         # If the user is buxgalter, allow the update
         if request.user.position == 0:

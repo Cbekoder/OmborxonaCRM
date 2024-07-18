@@ -2,7 +2,7 @@ from django.db import models
 from django.contrib.auth.models import AbstractUser
 
 class User(AbstractUser):
-    position = models.SmallIntegerField(default=0, choices=((0,'bugalter'),(1,'omborchi')))
+    position = models.SmallIntegerField(default=1, choices=((0,'bugalter'),(1,'omborchi'),(2,'reporter')))
 
     class Meta:
         verbose_name = 'Foydalanuvchi'

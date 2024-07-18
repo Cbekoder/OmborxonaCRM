@@ -12,7 +12,6 @@ class UserListSerializer(serializers.ModelSerializer):
         model = User
         fields = ['id', 'username', 'first_name', 'last_name']
 
-
 class UserCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
@@ -43,8 +42,6 @@ class OmborchiDetailSerializer(serializers.ModelSerializer):
         model = User
         fields = ['id', 'username', 'email', 'first_name', 'last_name', 'password']
         # read_only_fields = ['id', 'username', 'email', 'first_name', 'last_name', 'position']
-
-
 
 class ReportCodeSerializer(serializers.ModelSerializer):
     class Meta:

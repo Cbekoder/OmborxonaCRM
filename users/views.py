@@ -1,3 +1,4 @@
+from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
 from drf_yasg import openapi
 from rest_framework import generics
@@ -7,6 +8,8 @@ from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from drf_yasg.utils import swagger_auto_schema
+from rest_framework_simplejwt.tokens import RefreshToken
+
 from .serializers import UserSerializer, UserCreateSerializer, ReportCodeSerializer, UserListSerializer, \
     UserUpdateSerializer, OmborchiDetailSerializer
 from .permissions import *
@@ -49,7 +52,7 @@ class OmborchiUpdateAPIView(generics.UpdateAPIView):
 
 
 class OmborchiDetailAPIView(APIView):
-    permission_classes = (IsAuthenticated,)
+    permission_classes = [CanUpdateOmborchi]
 
     @swagger_auto_schema(tags=['Omborchi'],
                          manual_parameters=[
@@ -101,3 +104,22 @@ class ReportCodeView(APIView):
             return Response(serializer.data, status=status.HTTP_200_OK)
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class ReporterTokenView(APIView):
+    @swagger_auto_schema(tags=['user'], request_body=ReportCodeSerializer)
+    def post(self, request):
+        serializer = ReportCodeSerializer(data=request.data)
+        if serializer.is_valid():
+            password = request.data.get("password")
+            last_password = ReportCode.objects.last().password
+            if password == last_password:
+                user = User.objects.get(username="reporter")
+                refresh = RefreshToken.for_user(user)
+                access_token = str(refresh.access_token)
+                # refresh_token = str(refresh)
+                return JsonResponse({
+                    'access_token': access_token,
+                    # 'refresh_token': refresh_token
+                })
+            return Response({"error": "Wrong password"}, status=400)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
