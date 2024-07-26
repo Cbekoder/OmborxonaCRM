@@ -30,14 +30,41 @@ class ProductInputsListAPIView(APIView):
     @swagger_auto_schema(tags=['Statistics'], manual_parameters=[
         openapi.Parameter('product_id', openapi.IN_QUERY, description="Filter by product ID",
                           type=openapi.TYPE_INTEGER),
+        openapi.Parameter('start_date', openapi.IN_QUERY, description="Start date in format 'YYYY-MM-DD'",
+                          type=openapi.TYPE_STRING),
+        openapi.Parameter('end_date', openapi.IN_QUERY, description="End date in format 'YYYY-MM-DD'",
+                          type=openapi.TYPE_STRING),
+        openapi.Parameter('category', openapi.IN_QUERY, description="Category ID", type=openapi.TYPE_INTEGER),
+        openapi.Parameter('order_by', openapi.IN_QUERY, description="Order by field", type=openapi.TYPE_STRING,
+                          enum=['category', 'name', 'price', 'quantity']),
+        openapi.Parameter('search', openapi.IN_QUERY, description="Search query", type=openapi.TYPE_STRING),
     ])
     def get(self, request):
         product_inputs = ProductInput.objects.all()
+
+        start_date_str = request.query_params.get('start_date')
+        end_date_str = request.query_params.get('end_date')
+        category_id = request.query_params.get('category')
+        order_by = request.query_params.get('order_by')
+        search_query = request.query_params.get('search')
 
         # Filter by product_id if provided in query parameters
         product_id = request.query_params.get('product_id')
         if product_id:
             product_inputs = product_inputs.filter(product_id=product_id)
+
+        if category_id:
+            product_inputs = product_inputs.filter(category_id=category_id)
+
+        if order_by:
+            if order_by == 'category':
+                product_inputs = product_inputs.order_by('category__name')
+            elif order_by == 'name':
+                product_inputs = product_inputs.order_by('name')
+            elif order_by == 'price':
+                product_inputs = product_inputs.order_by('price')
+            elif order_by == 'quantity':
+                product_inputs = product_inputs.order_by('quantity')
 
         serializer = ProductInputGetSerializer(product_inputs, many=True)
         return Response(serializer.data)
@@ -54,9 +81,36 @@ class ProductOutputsListAPIView(APIView):
     @swagger_auto_schema(tags=['Statistics'], manual_parameters=[
         openapi.Parameter('product_id', openapi.IN_QUERY, description="Filter by product ID",
                           type=openapi.TYPE_INTEGER),
+        openapi.Parameter('start_date', openapi.IN_QUERY, description="Start date in format 'YYYY-MM-DD'",
+                          type=openapi.TYPE_STRING),
+        openapi.Parameter('end_date', openapi.IN_QUERY, description="End date in format 'YYYY-MM-DD'",
+                          type=openapi.TYPE_STRING),
+        openapi.Parameter('category', openapi.IN_QUERY, description="Category ID", type=openapi.TYPE_INTEGER),
+        openapi.Parameter('order_by', openapi.IN_QUERY, description="Order by field", type=openapi.TYPE_STRING,
+                          enum=['category', 'name', 'price', 'quantity']),
+        openapi.Parameter('search', openapi.IN_QUERY, description="Search query", type=openapi.TYPE_STRING),
     ])
     def get(self, request):
         product_outputs = ProductOutput.objects.all()
+
+        start_date_str = request.query_params.get('start_date')
+        end_date_str = request.query_params.get('end_date')
+        category_id = request.query_params.get('category')
+        order_by = request.query_params.get('order_by')
+        search_query = request.query_params.get('search')
+
+        if category_id:
+            product_outputs = product_outputs.filter(category_id=category_id)
+
+        if order_by:
+            if order_by == 'category':
+                product_outputs = product_outputs.order_by('category__name')
+            elif order_by == 'name':
+                product_outputs = product_outputs.order_by('name')
+            elif order_by == 'price':
+                product_outputs = product_outputs.order_by('price')
+            elif order_by == 'quantity':
+                product_outputs = product_outputs.order_by('quantity')
 
         # Filter by product_id if provided in query parameters
         product_id = request.query_params.get('product_id')
