@@ -9,9 +9,10 @@ from rest_framework.views import APIView
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.views import TokenObtainPairView
 
 from .serializers import UserSerializer, UserCreateSerializer, ReportCodeSerializer, UserListSerializer, \
-    UserUpdateSerializer, OmborchiDetailSerializer
+    UserUpdateSerializer, OmborchiDetailSerializer, CustomTokenObtainPairSerializer
 from .permissions import *
 from .models import *
 
@@ -116,10 +117,15 @@ class ReporterTokenView(APIView):
                 user = User.objects.get(username="reporter")
                 refresh = RefreshToken.for_user(user)
                 access_token = str(refresh.access_token)
-                # refresh_token = str(refresh)
+                refresh_token = str(refresh)
                 return JsonResponse({
                     'access_token': access_token,
-                    # 'refresh_token': refresh_token
+                    'refresh_token': refresh_token,
+                    "position": "reporter"
                 })
             return Response({"error": "Wrong password"}, status=400)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class CustomTokenObtainPairView(TokenObtainPairView):
+    serializer_class = CustomTokenObtainPairSerializer

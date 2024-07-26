@@ -1,4 +1,7 @@
 from rest_framework import serializers
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+from rest_framework_simplejwt.views import TokenObtainPairView
+
 from users.models import User, ReportCode
 
 
@@ -47,3 +50,25 @@ class ReportCodeSerializer(serializers.ModelSerializer):
     class Meta:
         model = ReportCode
         fields = ['password']
+
+class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
+    @classmethod
+    def get_token(cls, user):
+        token = super().get_token(user)
+
+        token['username'] = user.username
+        token['email'] = user.email
+
+        return token
+
+    def validate(self, attrs):
+        data = super().validate(attrs)
+
+        if self.user.position == 0:
+            data['position'] = "buxgalter"
+        elif self.user.position == 1:
+            data['position'] = "omborchi"
+        else:
+            data['position'] = None
+
+        return data
