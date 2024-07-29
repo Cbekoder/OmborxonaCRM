@@ -22,7 +22,7 @@ from .serializers import (CategorySerializer, UnitSerializer,
 
 #### CATEGORY ####
 class CategoriesAPIView(APIView):
-    permission_classes = [IsStaffUser]
+    permission_classes = [IsAuthenticated]
 
     @swagger_auto_schema(tags=['Categories'])
     def get(self, request):
@@ -40,7 +40,7 @@ class CategoriesAPIView(APIView):
 
 
 class CategoryAPIView(APIView):
-    permission_classes = [IsStaffUser]
+    permission_classes = [IsAuthenticated]
 
     def get_object(self, c):
         """
