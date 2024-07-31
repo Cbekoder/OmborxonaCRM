@@ -27,6 +27,11 @@ class ProductInputsListAPIView(APIView):
     """
     permission_classes = [IsAuthenticated, ]
 
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.start_date = make_aware(datetime.strptime("2020-01-01", '%Y-%m-%d'))
+        self.end_date = make_aware(datetime.combine(datetime.now().date(), time.max))
+
     @swagger_auto_schema(tags=['Statistics'], manual_parameters=[
         openapi.Parameter('product_id', openapi.IN_QUERY, description="Filter by product ID",
                           type=openapi.TYPE_INTEGER),
@@ -37,25 +42,57 @@ class ProductInputsListAPIView(APIView):
         openapi.Parameter('category', openapi.IN_QUERY, description="Category ID", type=openapi.TYPE_INTEGER),
         openapi.Parameter('order_by', openapi.IN_QUERY, description="Order by field", type=openapi.TYPE_STRING,
                           enum=['category', 'name', 'price', 'quantity']),
-        openapi.Parameter('search', openapi.IN_QUERY, description="Search query", type=openapi.TYPE_STRING),
     ])
     def get(self, request):
-        product_inputs = ProductInput.objects.all()
-
-        start_date_str = request.query_params.get('start_date')
-        end_date_str = request.query_params.get('end_date')
-        category_id = request.query_params.get('category')
-        order_by = request.query_params.get('order_by')
-        search_query = request.query_params.get('search')
-
-        # Filter by product_id if provided in query parameters
         product_id = request.query_params.get('product_id')
         if product_id:
-            product_inputs = product_inputs.filter(product_id=product_id)
+            product_inputs = ProductInput.objects.filter(product_id=product_id)
+        else:
+            product_inputs = ProductInput.objects.all()
 
+        category_id = request.query_params.get('category')
         if category_id:
             product_inputs = product_inputs.filter(category_id=category_id)
 
+        start_date_str = request.query_params.get('start_date')
+        end_date_str = request.query_params.get('end_date')
+        if start_date_str and end_date_str:
+            if start_date_str > end_date_str:
+                return Response({'error': 'Boshlanish sanasi yakuniy sanadan keyin bo\'lishi mumkin emas.'},
+                                status=status.HTTP_400_BAD_REQUEST)
+            try:
+                self.start_date = make_aware(datetime.strptime(start_date_str, '%Y-%m-%d'))
+                self.end_date = make_aware(
+                    datetime.combine(datetime.strptime(end_date_str, '%Y-%m-%d').date(), time.max))
+                product_inputs = product_inputs.filter(
+                    created_at__range=(self.start_date, self.end_date)
+                )
+            except ValueError:
+                return {'error': 'Invalid date format'}
+        elif start_date_str or end_date_str:
+            if start_date_str:
+                if start_date_str > datetime.now().strftime('%Y-%m-%d'):
+                    return Response({'error': 'Boshlanish sanasi bugungi sanadan keyin bo\'lishi mumkin emas.'},
+                                    status=status.HTTP_400_BAD_REQUEST)
+                try:
+                    self.start_date = make_aware(datetime.strptime(start_date_str, '%Y-%m-%d'))
+                    self.end_date = make_aware(datetime.now())
+
+                except ValueError:
+                    return {'error': 'Invalid date format'}
+            else:
+                try:
+                    self.start_date = make_aware(datetime.strptime("2020-01-01", '%Y-%m-%d'))
+                    self.end_date = make_aware(
+                        datetime.combine(datetime.strptime(end_date_str, '%Y-%m-%d').date(), time.max))
+                except ValueError:
+                    return {'error': 'Invalid date format'}
+
+            product_inputs = product_inputs.filter(
+                created_at__range=(self.start_date, self.end_date)
+            )
+
+        order_by = request.query_params.get('order_by')
         if order_by:
             if order_by == 'category':
                 product_inputs = product_inputs.order_by('category__name')
@@ -71,12 +108,16 @@ class ProductInputsListAPIView(APIView):
 
 
 #### OUTPUTS ####
-
 class ProductOutputsListAPIView(APIView):
     """
     List all product outputs or create a new one.
     """
     permission_classes = [IsAuthenticated, ]
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.start_date = make_aware(datetime.strptime("2020-01-01", '%Y-%m-%d'))
+        self.end_date = make_aware(datetime.combine(datetime.now().date(), time.max))
 
     @swagger_auto_schema(tags=['Statistics'], manual_parameters=[
         openapi.Parameter('product_id', openapi.IN_QUERY, description="Filter by product ID",
@@ -88,20 +129,57 @@ class ProductOutputsListAPIView(APIView):
         openapi.Parameter('category', openapi.IN_QUERY, description="Category ID", type=openapi.TYPE_INTEGER),
         openapi.Parameter('order_by', openapi.IN_QUERY, description="Order by field", type=openapi.TYPE_STRING,
                           enum=['category', 'name', 'price', 'quantity']),
-        openapi.Parameter('search', openapi.IN_QUERY, description="Search query", type=openapi.TYPE_STRING),
     ])
     def get(self, request):
-        product_outputs = ProductOutput.objects.all()
+        product_id = request.query_params.get('product_id')
+        if product_id:
+            product_outputs = ProductOutput.objects.filter(product_id=product_id)
+        else:
+            product_outputs = ProductOutput.objects.all()
 
-        start_date_str = request.query_params.get('start_date')
-        end_date_str = request.query_params.get('end_date')
         category_id = request.query_params.get('category')
-        order_by = request.query_params.get('order_by')
-        search_query = request.query_params.get('search')
-
         if category_id:
             product_outputs = product_outputs.filter(category_id=category_id)
 
+        start_date_str = request.query_params.get('start_date')
+        end_date_str = request.query_params.get('end_date')
+        if start_date_str and end_date_str:
+            if start_date_str > end_date_str:
+                return Response({'error': 'Boshlanish sanasi yakuniy sanadan keyin bo\'lishi mumkin emas.'},
+                                status=status.HTTP_400_BAD_REQUEST)
+            try:
+                self.start_date = make_aware(datetime.strptime(start_date_str, '%Y-%m-%d'))
+                self.end_date = make_aware(
+                    datetime.combine(datetime.strptime(end_date_str, '%Y-%m-%d').date(), time.max))
+                product_outputs = product_outputs.filter(
+                    created_at__range=(self.start_date, self.end_date)
+                )
+            except ValueError:
+                return {'error': 'Invalid date format'}
+        elif start_date_str or end_date_str:
+            if start_date_str:
+                if start_date_str > datetime.now().strftime('%Y-%m-%d'):
+                    return Response({'error': 'Boshlanish sanasi bugungi sanadan keyin bo\'lishi mumkin emas.'},
+                                    status=status.HTTP_400_BAD_REQUEST)
+                try:
+                    self.start_date = make_aware(datetime.strptime(start_date_str, '%Y-%m-%d'))
+                    self.end_date = make_aware(datetime.now())
+
+                except ValueError:
+                    return {'error': 'Invalid date format'}
+            else:
+                try:
+                    self.start_date = make_aware(datetime.strptime("2020-01-01", '%Y-%m-%d'))
+                    self.end_date = make_aware(
+                        datetime.combine(datetime.strptime(end_date_str, '%Y-%m-%d').date(), time.max))
+                except ValueError:
+                    return {'error': 'Invalid date format'}
+
+                product_outputs = product_outputs.filter(
+                    created_at__range=(self.start_date, self.end_date)
+                )
+
+        order_by = request.query_params.get('order_by')
         if order_by:
             if order_by == 'category':
                 product_outputs = product_outputs.order_by('category__name')
@@ -111,11 +189,6 @@ class ProductOutputsListAPIView(APIView):
                 product_outputs = product_outputs.order_by('price')
             elif order_by == 'quantity':
                 product_outputs = product_outputs.order_by('quantity')
-
-        # Filter by product_id if provided in query parameters
-        product_id = request.query_params.get('product_id')
-        if product_id:
-            product_outputs = product_outputs.filter(product_id=product_id)
 
         serializer = ProductOutputGetSerializer(product_outputs, many=True)
         return Response(serializer.data)
