@@ -128,3 +128,7 @@ This project is licensed under the MIT License. See the [LICENSE](LICENSE) file 
 ## Contact
 
 For any inquiries, please contact [cbekoder@gmail.com].
+
+## Owner
+
+Cbekoder
